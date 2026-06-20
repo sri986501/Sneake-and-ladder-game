@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0-jammy
+    container_name: arena_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - arena_network
+    restart: always
+
+  backend:
+    build: ./backend
+    container_name: arena_backend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/snake_ladder_arena
+      - JWT_SECRET=super_secret_cyberpunk_gaming_key_1337
+      - JWT_EXPIRE=30d
+      - NODE_ENV=production
+      - CLIENT_URL=http://localhost
+    depends_on:
+      - mongodb
+    networks:
+      - arena_network
+    restart: always
+
+  frontend:
+    build: ./frontend
+    container_name: arena_frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - arena_network
+    restart: always
+
+volumes:
+  mongo_data:
+
+networks:
+  arena_network:
+    driver: bridge
